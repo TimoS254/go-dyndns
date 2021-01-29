@@ -11,7 +11,8 @@ func getIPv4() (string, error) {
 	if err != nil {
 		return "", errors.New("encountered an Error while creating request")
 	}
-	resp, err := http.DefaultClient.Do(req)
+	req.Close = true
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", errors.New("encountered an Error while sending request")
 	}
@@ -20,6 +21,8 @@ func getIPv4() (string, error) {
 		return "", errors.New("encountered an Error while reading response")
 	}
 	s := string(body)
+	resp.Body.Close()
+	resp.Close = true
 	return s, nil
 }
 
@@ -28,7 +31,8 @@ func getIPv6() (string, error) {
 	if err != nil {
 		return "", errors.New("Encounterd an Error while creating request")
 	}
-	resp, err := http.DefaultClient.Do(req)
+	req.Close = true
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", errors.New("Encounterd an Error while sending request")
 	}
@@ -37,5 +41,7 @@ func getIPv6() (string, error) {
 		return "", errors.New("encountered an Error while reading response")
 	}
 	s := string(body)
+	resp.Body.Close()
+	resp.Close = true
 	return s, nil
 }
