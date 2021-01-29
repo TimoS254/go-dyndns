@@ -9,7 +9,16 @@ import (
 	"os/signal"
 )
 
-var config Config
+var config Config = Config{
+	IntervalMinutes: 5,
+	Domains: []Domain{{
+		DomainName:     "example.com",
+		IP4:            true,
+		IP6:            true,
+		APIToken:       "yourAPIToken",
+		ZoneIdentifier: "yourZoneIdentifier",
+	}},
+}
 
 func main() {
 	log.Println("Starting go-dyndns")
@@ -68,16 +77,7 @@ func initConfig() {
 		log.Println("Loading Config...")
 	} else if os.IsNotExist(err) {
 		log.Println("Creating Config from Template...")
-		//Create Config File from Template
-		data, err := ioutil.ReadFile("config-default.json")
-		if err != nil {
-			panic(err)
-		}
-		file, err := os.Create("config.json")
-		if err != nil {
-			panic(err)
-		}
-		file.Write(data)
+		generateConfig()
 		log.Println("Created Config from Template!")
 		os.Exit(0)
 	} else {

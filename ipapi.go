@@ -7,7 +7,7 @@ import (
 )
 
 func getIPv4() (string, error) {
-	req, err := http.NewRequest(http.MethodGet, "https://api4.tschwaak.me", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://api4.publicip.xyz", nil)
 	if err != nil {
 		return "", errors.New("encountered an Error while creating request")
 	}
@@ -27,7 +27,7 @@ func getIPv4() (string, error) {
 }
 
 func getIPv6() (string, error) {
-	req, err := http.NewRequest(http.MethodGet, "https://api6.tschwaak.me", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://api6.publicip.xyz", nil)
 	if err != nil {
 		return "", errors.New("Encounterd an Error while creating request")
 	}
