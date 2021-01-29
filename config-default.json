@@ -1,0 +1,12 @@
+{
+  "IntervalMinutes": 5,
+  "Domains": [
+    {
+      "DomainName": "example.com",
+      "IP4": true,
+      "IP6": true,
+      "APIToken": "yourAPIToken",
+      "ZoneIdentifier": "yourZoneIdentifier"
+    }
+  ]
+}
