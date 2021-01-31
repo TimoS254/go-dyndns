@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"errors"
@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func getIPv4() (string, error) {
+func GetIPv4() (string, error) {
 	req, err := http.NewRequest(http.MethodGet, "https://api4.publicip.xyz", nil)
 	if err != nil {
 		return "", errors.New("encountered an Error while creating request")
 	}
 	req.Close = true
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		return "", errors.New("encountered an Error while sending request")
 	}
@@ -26,13 +26,13 @@ func getIPv4() (string, error) {
 	return s, nil
 }
 
-func getIPv6() (string, error) {
+func GetIPv6() (string, error) {
 	req, err := http.NewRequest(http.MethodGet, "https://api6.publicip.xyz", nil)
 	if err != nil {
 		return "", errors.New("Encounterd an Error while creating request")
 	}
 	req.Close = true
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		return "", errors.New("Encounterd an Error while sending request")
 	}

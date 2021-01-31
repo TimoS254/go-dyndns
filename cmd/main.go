@@ -3,15 +3,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"go-dyndns/internal/config"
+	"go-dyndns/internal/updater"
+	"go-dyndns/pkg/api"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 )
 
-var config Config = Config{
+var conf = config.Config{
 	IntervalMinutes: 5,
-	Domains: []Domain{{
+	Domains: []config.Domain{{
 		DomainName:     "example.com",
 		IP4:            true,
 		IP6:            true,
@@ -39,28 +42,30 @@ func main() {
 		return
 	}()
 
-	update()
+	updater.Update(conf)
 }
 
 func initDomains() {
-	for i, domain := range config.Domains {
+	for i, domain := range conf.Domains {
 		if domain.IP4 {
-			ip, _ := getIPv4()
-			response := createRecord(domain, "A", domain.DomainName, ip)
+			ip, _ := api.GetIPv4()
+			response := api.CreateRecord(domain, "A", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created A record " + response.Result.Name + " to " + response.Result.Content)
-				config.Domains[i].lastID4 = response.Result.ID
+				config.SetID4(conf.Domains[i], response.Result.ID)
+				fmt.Println(config.GetID4(domain) + " --- " + response.Result.ID)
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)
 			}
 		}
 		if domain.IP6 {
-			ip, _ := getIPv6()
-			response := createRecord(domain, "AAAA", domain.DomainName, ip)
+			ip, _ := api.GetIPv6()
+			response := api.CreateRecord(domain, "AAAA", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created AAAA record " + response.Result.Name + " to " + response.Result.Content)
-				config.Domains[i].lastID6 = response.Result.ID
+				config.SetID6(conf.Domains[i], response.Result.ID)
+				fmt.Print(config.GetID6(domain))
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)
@@ -77,7 +82,7 @@ func initConfig() {
 		log.Println("Loading Config...")
 	} else if os.IsNotExist(err) {
 		log.Println("Creating Config from Template...")
-		generateConfig()
+		config.GenerateConfig(conf)
 		log.Println("Created Config from Template!")
 		os.Exit(0)
 	} else {
@@ -87,14 +92,14 @@ func initConfig() {
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(data, &config)
+	err = json.Unmarshal(data, &conf)
 	log.Println("Loaded Config!")
 }
 
 func shutdown() {
 	log.Println("Deleting Records and shutting down")
-	for _, d := range config.Domains {
-		deleteRecords(d)
+	for _, d := range conf.Domains {
+		api.DeleteRecords(d)
 	}
 	return
 }

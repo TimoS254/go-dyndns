@@ -1,8 +1,9 @@
-package main
+package api
 
 import (
 	"bytes"
 	"encoding/json"
+	"go-dyndns/internal/config"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,9 +11,9 @@ import (
 	"time"
 )
 
-var httpClient = &http.Client{}
+var HttpClient = &http.Client{}
 
-func setIP(domain Domain, recordType string, name string, content string) Response {
+func SetIP(domain config.Domain, recordType string, name string, content string) Response {
 	//Creating Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -28,9 +29,11 @@ func setIP(domain Domain, recordType string, name string, content string) Respon
 
 	id := ""
 	if recordType == "A" {
-		id = domain.lastID4
+		id = config.GetID4(domain)
+	} else if recordType == "AAAA" {
+		id = config.GetID6(domain)
 	} else {
-		id = domain.lastID6
+		//TODO Error Handling, wrong record type
 	}
 
 	//Creating Request and Setting Headers
@@ -43,7 +46,7 @@ func setIP(domain Domain, recordType string, name string, content string) Respon
 	req.Close = true
 
 	//Sending Request
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +63,7 @@ func setIP(domain Domain, recordType string, name string, content string) Respon
 	return response
 }
 
-func listRecords(domain Domain, forceReqs bool, name string, recordType string) ListedResponse {
+func listRecords(domain config.Domain, forceReqs bool, name string, recordType string) ListedResponse {
 	s := "?"
 	temp := "any"
 	if forceReqs {
@@ -83,7 +86,7 @@ func listRecords(domain Domain, forceReqs bool, name string, recordType string) 
 	req.Header.Set("Content-Type", "application/json")
 	req.Close = true
 
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +103,7 @@ func listRecords(domain Domain, forceReqs bool, name string, recordType string) 
 	return response
 }
 
-func createRecord(domain Domain, recordType string, name string, content string) Response {
+func CreateRecord(domain config.Domain, recordType string, name string, content string) Response {
 	//Creating Json Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -123,7 +126,7 @@ func createRecord(domain Domain, recordType string, name string, content string)
 	req.Close = true
 
 	//Sending Request
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -140,36 +143,36 @@ func createRecord(domain Domain, recordType string, name string, content string)
 	return response
 }
 
-func deleteRecords(domain Domain) {
+func DeleteRecords(domain config.Domain) {
 	if domain.IP4 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.lastID4, nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+config.GetID4(domain), nil)
 		if err != nil {
 			panic(err)
 		}
 		req.Header.Set("Authorization", "Bearer "+domain.APIToken)
 		req.Header.Set("Content-Type", "application/json")
 		req.Close = true
-		resp, err := httpClient.Do(req)
+		resp, err := HttpClient.Do(req)
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, domain.lastID4) {
+		if strings.Contains(s, config.GetID4(domain)) {
 			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
 		}
 	}
 	if domain.IP6 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.lastID6, nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+config.GetID6(domain), nil)
 		if err != nil {
 			panic(err)
 		}
 		req.Header.Set("Authorization", "Bearer "+domain.APIToken)
 		req.Header.Set("Content-Type", "application/json")
 		req.Close = true
-		resp, err := httpClient.Do(req)
+		resp, err := HttpClient.Do(req)
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, domain.lastID6) {
+		if strings.Contains(s, config.GetID6(domain)) {
 			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
 		}
 	}
