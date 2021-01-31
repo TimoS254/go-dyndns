@@ -29,9 +29,9 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 
 	id := ""
 	if recordType == "A" {
-		id = config.GetID4(domain)
+		id = domain.LastID4
 	} else if recordType == "AAAA" {
-		id = config.GetID6(domain)
+		id = domain.LastID6
 	} else {
 		//TODO Error Handling, wrong record type
 	}
@@ -145,7 +145,7 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 
 func DeleteRecords(domain config.Domain) {
 	if domain.IP4 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+config.GetID4(domain), nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.LastID4, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -156,12 +156,12 @@ func DeleteRecords(domain config.Domain) {
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, config.GetID4(domain)) {
+		if strings.Contains(s, domain.LastID4) {
 			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
 		}
 	}
 	if domain.IP6 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+config.GetID6(domain), nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.LastID6, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -172,7 +172,7 @@ func DeleteRecords(domain config.Domain) {
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, config.GetID6(domain)) {
+		if strings.Contains(s, domain.LastID6) {
 			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
 		}
 	}

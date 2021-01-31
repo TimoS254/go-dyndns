@@ -52,8 +52,7 @@ func initDomains() {
 			response := api.CreateRecord(domain, "A", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created A record " + response.Result.Name + " to " + response.Result.Content)
-				config.SetID4(conf.Domains[i], response.Result.ID)
-				fmt.Println(config.GetID4(domain) + " --- " + response.Result.ID)
+				conf.Domains[i].LastID4 = response.Result.ID
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)
@@ -64,8 +63,7 @@ func initDomains() {
 			response := api.CreateRecord(domain, "AAAA", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created AAAA record " + response.Result.Name + " to " + response.Result.Content)
-				config.SetID6(conf.Domains[i], response.Result.ID)
-				fmt.Print(config.GetID6(domain))
+				conf.Domains[i].LastID6 = response.Result.ID
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)

@@ -26,7 +26,7 @@ func Update(conf config.Config) {
 				ip, _ := api.GetIPv6()
 				response := api.SetIP(domain, "AAAA", domain.DomainName, ip)
 				if response.Success {
-					log.Println("Successfully changed A record " + response.Result.Name + " to " + response.Result.Content)
+					log.Println("Successfully changed AAAA record " + response.Result.Name + " to " + response.Result.Content)
 				} else {
 					log.Println("Encountered an error while changing " + domain.DomainName + ":")
 					fmt.Println(response.Errors)
