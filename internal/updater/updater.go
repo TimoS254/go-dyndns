@@ -2,8 +2,8 @@ package updater
 
 import (
 	"fmt"
-	"go-dyndns/internal/config"
-	"go-dyndns/pkg/api"
+	"github.com/TimoSLE/go-dyndns/internal/config"
+	"github.com/TimoSLE/go-dyndns/pkg/api"
 	"log"
 	"time"
 )

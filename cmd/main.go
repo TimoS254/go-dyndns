@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go-dyndns/internal/config"
-	"go-dyndns/internal/updater"
-	"go-dyndns/pkg/api"
+	"github.com/TimoSLE/go-dyndns/internal/config"
+	"github.com/TimoSLE/go-dyndns/internal/updater"
+	"github.com/TimoSLE/go-dyndns/pkg/api"
 	"io/ioutil"
 	"log"
 	"os"
@@ -52,7 +52,7 @@ func initDomains() {
 			response := api.CreateRecord(domain, "A", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created A record " + response.Result.Name + " to " + response.Result.Content)
-				conf.Domains[i].LastID4 = response.Result.ID
+				conf.Domains[i].SetID4(response.Result.ID)
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)
@@ -63,7 +63,7 @@ func initDomains() {
 			response := api.CreateRecord(domain, "AAAA", domain.DomainName, ip)
 			if response.Success {
 				log.Println("Successfully created AAAA record " + response.Result.Name + " to " + response.Result.Content)
-				conf.Domains[i].LastID6 = response.Result.ID
+				conf.Domains[i].SetID6(response.Result.ID)
 			} else {
 				log.Println("Encountered an error while creating " + domain.DomainName + ":")
 				fmt.Println(response.Errors)
@@ -88,7 +88,7 @@ func initConfig() {
 	}
 	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		panic(err)
+		log.Panicf("Could not read Config File: %v", err)
 	}
 	err = json.Unmarshal(data, &conf)
 	log.Println("Loaded Config!")

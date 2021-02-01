@@ -3,7 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"go-dyndns/internal/config"
+	"github.com/TimoSLE/go-dyndns/internal/config"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,11 +29,16 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 
 	id := ""
 	if recordType == "A" {
-		id = domain.LastID4
+		id = domain.GetID4()
 	} else if recordType == "AAAA" {
-		id = domain.LastID6
+		id = domain.GetID6()
 	} else {
-		//TODO Error Handling, wrong record type
+		errorResponse := Response{
+			Success:  false,
+			Errors:   []interface{}{"Wrong Record Type"},
+			Messages: []interface{}{"Wrong Record Type"},
+		}
+		return errorResponse
 	}
 
 	//Creating Request and Setting Headers
@@ -145,7 +150,7 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 
 func DeleteRecords(domain config.Domain) {
 	if domain.IP4 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.LastID4, nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.GetID4(), nil)
 		if err != nil {
 			panic(err)
 		}
@@ -153,15 +158,18 @@ func DeleteRecords(domain config.Domain) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Close = true
 		resp, err := HttpClient.Do(req)
+		if err != nil {
+			log.Printf("Error with request %v: %v", req, err)
+		}
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, domain.LastID4) {
+		if strings.Contains(s, domain.GetID4()) {
 			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
 		}
 	}
 	if domain.IP6 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.LastID6, nil)
+		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.GetID6(), nil)
 		if err != nil {
 			panic(err)
 		}
@@ -169,10 +177,13 @@ func DeleteRecords(domain config.Domain) {
 		req.Header.Set("Content-Type", "application/json")
 		req.Close = true
 		resp, err := HttpClient.Do(req)
+		if err != nil {
+			log.Printf("Error with request %v: %v", req, err)
+		}
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
-		if strings.Contains(s, domain.LastID6) {
+		if strings.Contains(s, domain.GetID6()) {
 			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
 		}
 	}
