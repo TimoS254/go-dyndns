@@ -3,7 +3,9 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/TimoSLE/go-dyndns/internal/config"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +15,9 @@ import (
 
 var HttpClient = &http.Client{}
 
-func SetIP(domain config.Domain, recordType string, name string, content string) Response {
+const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
+
+func SetIP(domain config.Domain, recordType string, name string, content string) *Response {
 	//Creating Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -38,23 +42,10 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 			Errors:   []interface{}{"Wrong Record Type"},
 			Messages: []interface{}{"Wrong Record Type"},
 		}
-		return errorResponse
+		return &errorResponse
 	}
 
-	//Creating Request and Setting Headers
-	req, err := http.NewRequest(http.MethodPut, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+id, bytes.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Authorization", "Bearer "+domain.APIToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Close = true
-
-	//Sending Request
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+	resp := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), domain.ZoneIdentifier, id, domain.APIToken)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -65,10 +56,10 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 	if err = json.Unmarshal(body, &response); err != nil {
 		panic(err)
 	}
-	return response
+	return &response
 }
 
-func listRecords(domain config.Domain, forceReqs bool, name string, recordType string) ListedResponse {
+func ListRecords(domain config.Domain, forceReqs bool, name string, recordType string) *ListedResponse {
 	s := "?"
 	temp := "any"
 	if forceReqs {
@@ -82,19 +73,7 @@ func listRecords(domain config.Domain, forceReqs bool, name string, recordType s
 		s = s + "&type=" + recordType
 	}
 
-	//Create Request, Set Headers
-	req, err := http.NewRequest(http.MethodGet, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records"+s, nil)
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Authorization", "Bearer "+domain.APIToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Close = true
-
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+	resp := doAuthorizedRequest(http.MethodGet, nil, domain.ZoneIdentifier, s, domain.APIToken)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -105,10 +84,10 @@ func listRecords(domain config.Domain, forceReqs bool, name string, recordType s
 	if err = json.Unmarshal(body, &response); err != nil {
 		panic(err)
 	}
-	return response
+	return &response
 }
 
-func CreateRecord(domain config.Domain, recordType string, name string, content string) Response {
+func CreateRecord(domain config.Domain, recordType string, name string, content string) *Response {
 	//Creating Json Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -122,19 +101,7 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 		panic(err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records", bytes.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Authorization", "Bearer "+domain.APIToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Close = true
-
-	//Sending Request
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
+	resp := doAuthorizedRequest(http.MethodPost, bytes.NewReader(body), domain.ZoneIdentifier, "", domain.APIToken)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -145,22 +112,12 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 	if err = json.Unmarshal(body, &response); err != nil {
 		panic(err)
 	}
-	return response
+	return &response
 }
 
 func DeleteRecords(domain config.Domain) {
 	if domain.IP4 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.GetID4(), nil)
-		if err != nil {
-			panic(err)
-		}
-		req.Header.Set("Authorization", "Bearer "+domain.APIToken)
-		req.Header.Set("Content-Type", "application/json")
-		req.Close = true
-		resp, err := HttpClient.Do(req)
-		if err != nil {
-			log.Printf("Error with request %v: %v", req, err)
-		}
+		resp := doAuthorizedRequest(http.MethodDelete, nil, domain.ZoneIdentifier, domain.GetID4(), domain.APIToken)
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
@@ -169,17 +126,7 @@ func DeleteRecords(domain config.Domain) {
 		}
 	}
 	if domain.IP6 {
-		req, err := http.NewRequest(http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+domain.ZoneIdentifier+"/dns_records/"+domain.GetID6(), nil)
-		if err != nil {
-			panic(err)
-		}
-		req.Header.Set("Authorization", "Bearer "+domain.APIToken)
-		req.Header.Set("Content-Type", "application/json")
-		req.Close = true
-		resp, err := HttpClient.Do(req)
-		if err != nil {
-			log.Printf("Error with request %v: %v", req, err)
-		}
+		resp := doAuthorizedRequest(http.MethodDelete, nil, domain.ZoneIdentifier, domain.GetID6(), domain.APIToken)
 		defer resp.Body.Close()
 		o, _ := ioutil.ReadAll(resp.Body)
 		s := string(o)
@@ -187,6 +134,24 @@ func DeleteRecords(domain config.Domain) {
 			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
 		}
 	}
+}
+
+func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID string, apiToken string) *http.Response {
+	//Create Request
+	req, err := http.NewRequest(method, fmt.Sprintf(url, zoneID, domainID), body)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Close = true
+
+	//Sending Request
+	resp, err := HttpClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
 }
 
 type SetRequestBody struct {
