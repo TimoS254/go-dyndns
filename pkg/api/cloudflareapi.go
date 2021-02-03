@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/TimoSLE/go-dyndns/internal/config"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -17,7 +14,7 @@ var HttpClient = &http.Client{}
 
 const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
 
-func SetIP(domain config.Domain, recordType string, name string, content string) *Response {
+func SetIP(apiToken string, zoneID string, domainID string, recordType string, name string, content string) *Response {
 	//Creating Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -31,21 +28,7 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 		panic(err)
 	}
 
-	id := ""
-	if recordType == "A" {
-		id = domain.GetID4()
-	} else if recordType == "AAAA" {
-		id = domain.GetID6()
-	} else {
-		errorResponse := Response{
-			Success:  false,
-			Errors:   []interface{}{"Wrong Record Type"},
-			Messages: []interface{}{"Wrong Record Type"},
-		}
-		return &errorResponse
-	}
-
-	resp := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), domain.ZoneIdentifier, id, domain.APIToken)
+	resp := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), zoneID, domainID, apiToken)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -59,7 +42,7 @@ func SetIP(domain config.Domain, recordType string, name string, content string)
 	return &response
 }
 
-func ListRecords(domain config.Domain, forceReqs bool, name string, recordType string) *ListedResponse {
+func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, recordType string) *ListedResponse {
 	s := "?"
 	temp := "any"
 	if forceReqs {
@@ -73,7 +56,7 @@ func ListRecords(domain config.Domain, forceReqs bool, name string, recordType s
 		s = s + "&type=" + recordType
 	}
 
-	resp := doAuthorizedRequest(http.MethodGet, nil, domain.ZoneIdentifier, s, domain.APIToken)
+	resp := doAuthorizedRequest(http.MethodGet, nil, zoneID, s, apiToken)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -87,7 +70,7 @@ func ListRecords(domain config.Domain, forceReqs bool, name string, recordType s
 	return &response
 }
 
-func CreateRecord(domain config.Domain, recordType string, name string, content string) *Response {
+func CreateRecord(apiToken string, zoneID string, recordType string, name string, content string) *Response {
 	//Creating Json Request Body
 	request := SetRequestBody{
 		RecordType: recordType,
@@ -101,7 +84,7 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 		panic(err)
 	}
 
-	resp := doAuthorizedRequest(http.MethodPost, bytes.NewReader(body), domain.ZoneIdentifier, "", domain.APIToken)
+	resp := doAuthorizedRequest(http.MethodPost, bytes.NewReader(body), zoneID, "", apiToken)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -115,25 +98,13 @@ func CreateRecord(domain config.Domain, recordType string, name string, content 
 	return &response
 }
 
-func DeleteRecords(domain config.Domain) {
-	if domain.IP4 {
-		resp := doAuthorizedRequest(http.MethodDelete, nil, domain.ZoneIdentifier, domain.GetID4(), domain.APIToken)
-		defer resp.Body.Close()
-		o, _ := ioutil.ReadAll(resp.Body)
-		s := string(o)
-		if strings.Contains(s, domain.GetID4()) {
-			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
-		}
-	}
-	if domain.IP6 {
-		resp := doAuthorizedRequest(http.MethodDelete, nil, domain.ZoneIdentifier, domain.GetID6(), domain.APIToken)
-		defer resp.Body.Close()
-		o, _ := ioutil.ReadAll(resp.Body)
-		s := string(o)
-		if strings.Contains(s, domain.GetID6()) {
-			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
-		}
-	}
+func DeleteRecord(apiToken string, zoneID string, domainID string) *Result {
+	resp := doAuthorizedRequest(http.MethodDelete, nil, zoneID, domainID, apiToken)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	var result Result
+	json.Unmarshal(body, &result)
+	return &result
 }
 
 func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID string, apiToken string) *http.Response {
