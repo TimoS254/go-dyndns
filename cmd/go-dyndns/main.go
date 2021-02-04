@@ -12,19 +12,25 @@ import (
 	"os/signal"
 )
 
-var conf = config.Config{
-	IntervalMinutes: 5,
-	Domains: []config.Domain{{
-		DomainName:     "example.com",
-		IP4:            true,
-		IP6:            true,
-		APIToken:       "yourAPIToken",
-		ZoneIdentifier: "yourZoneIdentifier",
-	}},
-}
+var (
+	GitVersion string
+	GitBranch  string
+	conf       = config.Config{
+		IntervalMinutes: 5,
+		Domains: []config.Domain{{
+			DomainName:     "example.com",
+			IP4:            true,
+			IP6:            true,
+			Proxy:          false,
+			APIToken:       "yourAPIToken",
+			ZoneIdentifier: "yourZoneIdentifier",
+		}},
+	}
+)
 
 func main() {
-	log.Println("Starting go-dyndns")
+	log.Printf("Starting go-dyndns")
+	log.Printf("Version: %s Branch %s\n", GitVersion, GitBranch)
 	//Initialize Config
 	initConfig()
 
@@ -49,7 +55,7 @@ func initDomains() {
 	for i, domain := range conf.Domains {
 		if domain.IP4 {
 			ip, _ := api.GetIPv4()
-			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.A, domain.DomainName, ip, false)
+			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.A, domain.DomainName, ip, domain.Proxy)
 			if response.Success {
 				log.Println("Successfully created A record " + response.Result.Name + " to " + response.Result.Content)
 				conf.Domains[i].SetID4(response.Result.ID)
@@ -60,7 +66,7 @@ func initDomains() {
 		}
 		if domain.IP6 {
 			ip, _ := api.GetIPv6()
-			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.AAAA, domain.DomainName, ip, false)
+			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.AAAA, domain.DomainName, ip, domain.Proxy)
 			if response.Success {
 				log.Println("Successfully created AAAA record " + response.Result.Name + " to " + response.Result.Content)
 				conf.Domains[i].SetID6(response.Result.ID)
@@ -91,6 +97,9 @@ func initConfig() {
 		log.Panicf("Could not read Config File: %v", err)
 	}
 	err = json.Unmarshal(data, &conf)
+	if err != nil {
+		log.Panicf("Encountered Error unmarshalling json body of config: %v", err)
+	}
 	log.Println("Loaded Config!")
 }
 

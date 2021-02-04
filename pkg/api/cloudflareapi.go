@@ -16,8 +16,8 @@ const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
 
 func UpdateRecord(apiToken string, zoneID string, recordID string, recordType RecordType, name string, content string, proxied bool) *Response {
 	//Creating Request Body
-	request := SetRequestBody{
-		RecordType: string(recordType),
+	request := RequestBody{
+		RecordType: recordType,
 		Name:       name,
 		Content:    content,
 		TTL:        1,
@@ -73,8 +73,8 @@ func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, re
 
 func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) *Response {
 	//Creating Json Request Body
-	request := SetRequestBody{
-		RecordType: string(recordType),
+	request := RequestBody{
+		RecordType: recordType,
 		Name:       name,
 		Content:    content,
 		TTL:        1,
@@ -126,12 +126,12 @@ func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID 
 	return resp
 }
 
-type SetRequestBody struct {
-	RecordType string `json:"type"`
-	Name       string `json:"name"`
-	Content    string `json:"content"`
-	TTL        int    `json:"ttl"`
-	Proxied    bool   `json:"proxied"`
+type RequestBody struct {
+	RecordType RecordType `json:"type"`
+	Name       string     `json:"name"`
+	Content    string     `json:"content"`
+	TTL        int        `json:"ttl"`
+	Proxied    bool       `json:"proxied"`
 }
 
 type Response struct {
