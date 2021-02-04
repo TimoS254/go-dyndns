@@ -14,21 +14,21 @@ var HttpClient = &http.Client{}
 
 const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
 
-func SetIP(apiToken string, zoneID string, domainID string, recordType string, name string, content string) *Response {
+func UpdateRecord(apiToken string, zoneID string, recordID string, recordType RecordType, name string, content string, proxied bool) *Response {
 	//Creating Request Body
 	request := SetRequestBody{
-		RecordType: recordType,
+		RecordType: string(recordType),
 		Name:       name,
 		Content:    content,
 		TTL:        1,
-		Proxied:    false,
+		Proxied:    proxied,
 	}
 	body, err := json.Marshal(request)
 	if err != nil {
 		panic(err)
 	}
 
-	resp := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), zoneID, domainID, apiToken)
+	resp := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), zoneID, recordID, apiToken)
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -42,7 +42,7 @@ func SetIP(apiToken string, zoneID string, domainID string, recordType string, n
 	return &response
 }
 
-func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, recordType string) *ListedResponse {
+func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, recordType RecordType) *ListedResponse {
 	s := "?"
 	temp := "any"
 	if forceReqs {
@@ -53,8 +53,9 @@ func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, re
 		s = s + "&name=" + name
 	}
 	if recordType != "" {
-		s = s + "&type=" + recordType
+		s = s + "&type=" + string(recordType)
 	}
+	s = s + "&per_page=100"
 
 	resp := doAuthorizedRequest(http.MethodGet, nil, zoneID, s, apiToken)
 
@@ -70,14 +71,14 @@ func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, re
 	return &response
 }
 
-func CreateRecord(apiToken string, zoneID string, recordType string, name string, content string) *Response {
+func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) *Response {
 	//Creating Json Request Body
 	request := SetRequestBody{
-		RecordType: recordType,
+		RecordType: string(recordType),
 		Name:       name,
 		Content:    content,
 		TTL:        1,
-		Proxied:    false,
+		Proxied:    proxied,
 	}
 	body, err := json.Marshal(request)
 	if err != nil {
@@ -146,6 +147,21 @@ type ListedResponse struct {
 	Messages []interface{} `json:"messages"`
 	Result   []Result      `json:"result"`
 }
+
+type RecordType string
+
+const (
+	A     RecordType = "A"
+	AAAA  RecordType = "AAAA"
+	TXT   RecordType = "TXT"
+	CNAME RecordType = "CNAME"
+	HTTPS RecordType = "HTTPS"
+	SRV   RecordType = "SRV"
+	LOC   RecordType = "LOC"
+	MX    RecordType = "MX"
+	NS    RecordType = "NS"
+	SPF   RecordType = "SPF"
+)
 
 type Result struct {
 	ID         string    `json:"id"`

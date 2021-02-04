@@ -22,7 +22,7 @@ func Update(conf *config.Config) {
 func UpdateDomain(domain *config.Domain) {
 	if domain.IP4 {
 		ip, _ := api.GetIPv4()
-		response := api.SetIP(domain.APIToken, domain.ZoneIdentifier, domain.GetID4(), "A", domain.DomainName, ip)
+		response := api.UpdateRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID4(), api.A, domain.DomainName, ip, false)
 		if response.Success {
 			log.Println("Successfully changed A record " + response.Result.Name + " to " + response.Result.Content)
 		} else {
@@ -32,7 +32,7 @@ func UpdateDomain(domain *config.Domain) {
 	}
 	if domain.IP6 {
 		ip, _ := api.GetIPv6()
-		response := api.SetIP(domain.APIToken, domain.ZoneIdentifier, domain.GetID6(), "AAAA", domain.DomainName, ip)
+		response := api.UpdateRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID6(), api.AAAA, domain.DomainName, ip, false)
 		if response.Success {
 			log.Println("Successfully changed AAAA record " + response.Result.Name + " to " + response.Result.Content)
 		} else {
