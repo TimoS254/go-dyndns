@@ -55,7 +55,10 @@ func initDomains() {
 	for i, domain := range conf.Domains {
 		if domain.IP4 {
 			ip, _ := api.GetIPv4()
-			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.A, domain.DomainName, ip, domain.Proxy)
+			response, err := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.A, domain.DomainName, ip, domain.Proxy)
+			if err != nil {
+				log.Printf("Encountered an error while creating A record of Domain %s: %v", domain.DomainName, err)
+			}
 			if response.Success {
 				log.Println("Successfully created A record " + response.Result.Name + " to " + response.Result.Content)
 				conf.Domains[i].SetID4(response.Result.ID)
@@ -66,7 +69,10 @@ func initDomains() {
 		}
 		if domain.IP6 {
 			ip, _ := api.GetIPv6()
-			response := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.AAAA, domain.DomainName, ip, domain.Proxy)
+			response, err := api.CreateRecord(domain.APIToken, domain.ZoneIdentifier, api.AAAA, domain.DomainName, ip, domain.Proxy)
+			if err != nil {
+				log.Printf("Encountered an error while creating AAAA record of Domain %s: %v", domain.DomainName, err)
+			}
 			if response.Success {
 				log.Println("Successfully created AAAA record " + response.Result.Name + " to " + response.Result.Content)
 				conf.Domains[i].SetID6(response.Result.ID)
