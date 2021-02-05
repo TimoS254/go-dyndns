@@ -10,9 +10,8 @@ If you are not using make you can just build it with
 >go build ./cmd/go-dyndns/main.go
 
 ## Usage
-On First Execution the Program will generate a config.json file which you have to modify according to your Usecase.  
-  
-The Fol
+On First Execution the Program will generate a config.json file which you have to modify according to your Usecase.
+The Following Keys can be modified in the config
 
 Config Key | Datatype | Example | Explanation
 ------------ | ------------- | ------------- | -------------
