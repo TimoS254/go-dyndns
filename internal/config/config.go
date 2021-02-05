@@ -15,10 +15,11 @@ type Domain struct {
 	DomainName     string
 	IP4            bool
 	IP6            bool
-	id4            string
-	id6            string
+	Proxy          bool
 	APIToken       string
 	ZoneIdentifier string
+	id4            string
+	id6            string
 }
 
 func GenerateConfig(config Config) {

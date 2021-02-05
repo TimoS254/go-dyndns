@@ -91,6 +91,6 @@ fabric.properties
 # vendor/
 
 #Config File
-config.json
+config*.json
 
 

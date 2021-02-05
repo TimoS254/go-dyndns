@@ -1,53 +1,41 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
+const ipUrl = "https://api%s.publicip.xyz"
+
+//GetIPv4 returns the current IPv4 of the System in a string
 func GetIPv4() (string, error) {
-	req, err := http.NewRequest(http.MethodGet, "https://api4.publicip.xyz", nil)
-	if err != nil {
-		return "", errors.New("encountered an Error while creating request")
-	}
-	req.Close = true
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		return "", errors.New("encountered an Error while sending request")
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.New("encountered an Error while reading response")
-	}
-	s := string(body)
-	err = resp.Body.Close()
-	if err != nil {
-		log.Printf("Couldnt Close Request Body %v", err)
-	}
-	resp.Close = true
-	return s, nil
+	return getIP("4")
 }
 
+//GetIPv6 returns the current IPv6 of the System in a string
 func GetIPv6() (string, error) {
-	req, err := http.NewRequest(http.MethodGet, "https://api6.publicip.xyz", nil)
+	return getIP("6")
+}
+
+func getIP(version string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(ipUrl, version), nil)
 	if err != nil {
-		return "", errors.New("encountered an Error while creating request")
+		return "", fmt.Errorf("encountered error creating request %v: %w", req, err)
 	}
 	req.Close = true
 	resp, err := HttpClient.Do(req)
 	if err != nil {
-		return "", errors.New("encountered an Error while sending request")
+		return "", fmt.Errorf("encountered error sending request %v: %w", resp, err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.New("encountered an Error while reading response")
+		return "", fmt.Errorf("encountered error reading request %v: %w", body, err)
 	}
 	s := string(body)
 	err = resp.Body.Close()
 	if err != nil {
-		log.Printf("Couldnt Close Request Body %v", err)
+		return s, fmt.Errorf("encountered error closing response Body: %w", err)
 	}
 	resp.Close = true
 	return s, nil

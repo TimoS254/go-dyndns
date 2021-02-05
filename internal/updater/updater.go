@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"fmt"
 	"github.com/TimoSLE/go-dyndns/internal/config"
 	"github.com/TimoSLE/go-dyndns/pkg/api"
 	"log"
@@ -22,36 +21,46 @@ func Update(conf *config.Config) {
 func UpdateDomain(domain *config.Domain) {
 	if domain.IP4 {
 		ip, _ := api.GetIPv4()
-		response := api.SetIP(domain.APIToken, domain.ZoneIdentifier, domain.GetID4(), "A", domain.DomainName, ip)
+		response, err := api.UpdateRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID4(), api.A, domain.DomainName, ip, domain.Proxy)
+		if err != nil {
+			log.Printf("Encountered an error while updating A record of Domain %s: %v", domain.DomainName, err)
+		}
 		if response.Success {
 			log.Println("Successfully changed A record " + response.Result.Name + " to " + response.Result.Content)
 		} else {
-			log.Println("Encountered an error while changing " + domain.DomainName + ":")
-			fmt.Println(response.Errors)
+			log.Printf("Encountered an error while changing %s: %v ", domain.DomainName, response.Errors)
 		}
 	}
 	if domain.IP6 {
 		ip, _ := api.GetIPv6()
-		response := api.SetIP(domain.APIToken, domain.ZoneIdentifier, domain.GetID6(), "AAAA", domain.DomainName, ip)
+		response, err := api.UpdateRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID6(), api.AAAA, domain.DomainName, ip, domain.Proxy)
+		if err != nil {
+			log.Printf("Encountered an error while updating AAAA record of Domain %s: %v", domain.DomainName, err)
+		}
 		if response.Success {
 			log.Println("Successfully changed AAAA record " + response.Result.Name + " to " + response.Result.Content)
 		} else {
-			log.Println("Encountered an error while changing " + domain.DomainName + ":")
-			fmt.Println(response.Errors)
+			log.Printf("Encountered an error while changing %s: %v ", domain.DomainName, response.Errors)
 		}
 	}
 }
 
 func DeleteRecords(domain *config.Domain) {
 	if domain.IP4 {
-		res := api.DeleteRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID4())
-		if strings.Contains(res.ID, domain.GetID4()) {
+		response, err := api.DeleteRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID4())
+		if err != nil {
+			log.Printf("Encountered an error while deleting A record of Domain %s: %v", domain.DomainName, err)
+		}
+		if strings.Contains(response.ID, domain.GetID4()) {
 			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
 		}
 	}
 	if domain.IP6 {
-		res := api.DeleteRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID6())
-		if strings.Contains(res.ID, domain.GetID6()) {
+		response, err := api.DeleteRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID6())
+		if err != nil {
+			log.Printf("Encountered an error while deleting AAAA record of Domain %s: %v", domain.DomainName, err)
+		}
+		if strings.Contains(response.ID, domain.GetID6()) {
 			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
 		}
 	}
