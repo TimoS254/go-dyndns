@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
+//Update Starts the ticker for updating domains
 func Update(conf *config.Config) {
-
 	for range time.Tick(time.Minute * time.Duration(conf.IntervalMinutes)) {
 		for _, domain := range conf.Domains {
 			go UpdateDomain(&domain)
@@ -18,6 +18,7 @@ func Update(conf *config.Config) {
 	}
 }
 
+//UpdateDomain handles the update of a specific config.Domain
 func UpdateDomain(domain *config.Domain) {
 	if domain.IP4 {
 		ip, _ := api.GetIPv4()
@@ -45,6 +46,7 @@ func UpdateDomain(domain *config.Domain) {
 	}
 }
 
+//DeleteRecords deletes all records of a specific Domain
 func DeleteRecords(domain *config.Domain) {
 	if domain.IP4 {
 		response, err := api.DeleteRecord(domain.APIToken, domain.ZoneIdentifier, domain.GetID4())
