@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+//HttpClient handles all the http requests of the api
 var HttpClient = &http.Client{}
 
 const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
@@ -170,11 +171,11 @@ type ListedResponse struct {
 	Result   []Result      `json:"result"`   //Array of Result
 }
 
-//RecordType
+//RecordType represents the type a record can be
 type RecordType string
 
+//Possible options for RecordType
 const (
-	//Possible options for RecordType
 	A     RecordType = "A"
 	AAAA  RecordType = "AAAA"
 	TXT   RecordType = "TXT"

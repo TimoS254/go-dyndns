@@ -13,10 +13,13 @@ import (
 )
 
 var (
+	//GitVersion represents the Git Tag of the current build
 	GitVersion string
-	GitBranch  string
-	conf       = config.Config{
+	//GitBranch represents the Git Branch of the current build
+	GitBranch string
+	conf      = config.Config{
 		IntervalMinutes: 5,
+		IntervalSeconds: 0,
 		Domains: []config.Domain{{
 			DomainName:     "example.com",
 			IP4:            true,
