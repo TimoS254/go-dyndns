@@ -10,7 +10,17 @@ import (
 
 //Update Starts the ticker for updating domains
 func Update(conf *config.Config) {
-	for range time.Tick(time.Minute * time.Duration(conf.IntervalMinutes)) {
+	var delay = time.Duration(0)
+	if conf.IntervalMinutes != 0 {
+		delay = delay + time.Minute*time.Duration(conf.IntervalMinutes)
+	}
+	if conf.IntervalSeconds != 0 {
+		delay = delay + time.Second*time.Duration(conf.IntervalSeconds)
+	}
+	if delay.Seconds() < 1 {
+		delay = time.Second * 1
+	}
+	for range time.Tick(delay) {
 		for _, domain := range conf.Domains {
 			go UpdateDomain(&domain)
 		}

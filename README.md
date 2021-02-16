@@ -15,6 +15,7 @@ The Following Keys can be modified in the config
 Config Key | Datatype | Default/Example | Explanation
 ------------ | ------------- | ------------- | -------------
 IntervalMinutes | int8 | 5 | Update Interval in Minutes
+IntervalSeconds | int8 | 0 | Update Interval in Seconds
 Domains | Array | / | Array of Domains which should be updated
 
 Each of the Domains in the Domain Array should consist of the following variables

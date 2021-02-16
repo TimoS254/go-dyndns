@@ -19,6 +19,7 @@ var (
 	GitBranch string
 	conf      = config.Config{
 		IntervalMinutes: 5,
+		IntervalSeconds: 0,
 		Domains: []config.Domain{{
 			DomainName:     "example.com",
 			IP4:            true,

@@ -9,6 +9,7 @@ import (
 //Config consists of all variables saved in the config
 type Config struct {
 	IntervalMinutes int8
+	IntervalSeconds int8
 	Domains         []Domain
 }
 
