@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [ 1.15.x ]
+        go-version: ['1.16.x']
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -21,7 +21,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go-version: [1.15.x]
+        go-version: ['1.16.x']
         os: [ubuntu-latest]
         compile-os-arch: ["GOOS=linux GOARCH=amd64", "GOOS=linux GOARCH=386", "GOOS=linux GOARCH=arm64", "GOOS=linux GOARCH=arm", "GOOS=windows GOARCH=amd64", "GOOS=windows GOARCH=386"]
     runs-on: ${{ matrix.os }}
@@ -36,7 +36,7 @@ jobs:
       - name: Build standard binaries
         run: ${{ matrix.compile-os-arch }} make build
       - name: Upload build artifacts
-        if: ${{ matrix.go-version == '1.15.x' }}
+        if: ${{ matrix.go-version == '1.16.x' }}
         uses: actions/upload-artifact@v2
         with:
           name: BuildArtifact
