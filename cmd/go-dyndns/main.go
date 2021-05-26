@@ -6,7 +6,6 @@ import (
 	"github.com/TimoSLE/go-dyndns/internal/config"
 	"github.com/TimoSLE/go-dyndns/internal/updater"
 	"github.com/TimoSLE/go-dyndns/pkg/api"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -101,7 +100,7 @@ func initConfig() {
 	} else {
 		panic(err)
 	}
-	data, err := ioutil.ReadFile("config.json")
+	data, err := os.ReadFile("config.json")
 	if err != nil {
 		log.Panicf("Could not read Config File: %v", err)
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -36,7 +35,7 @@ func UpdateRecord(apiToken string, zoneID string, recordID string, recordType Re
 	}
 	defer resp.Body.Close()
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +67,7 @@ func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, re
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +100,7 @@ func CreateRecord(apiToken string, zoneID string, recordType RecordType, name st
 	}
 	defer resp.Body.Close()
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,7 @@ func DeleteRecord(apiToken string, zoneID string, recordID string) (*Result, err
 		return nil, err
 	}
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	var result Result
 	err = json.Unmarshal(body, &result)
 	if err != nil {
