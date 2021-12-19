@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/TimoS254/go-dyndns/internal"
 	"github.com/TimoS254/go-dyndns/internal/config"
 	"github.com/TimoS254/go-dyndns/internal/updater"
 	"github.com/TimoS254/go-dyndns/pkg/api"
@@ -33,6 +34,10 @@ var (
 func main() {
 	log.Printf("Starting go-dyndns")
 	log.Printf("Version: %s Branch %s\n", GitVersion, GitBranch)
+
+	//Init Colors
+	internal.InitColor()
+
 	//Initialize Config
 	initConfig()
 

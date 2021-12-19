@@ -46,7 +46,7 @@ func UpdateRecord(apiToken string, zoneID string, recordID string, recordType Re
 	return &response, nil
 }
 
-//ListRecords list all records which fit the given parameters
+/*/ListRecords list all records which fit the given parameters
 func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, recordType RecordType) (*ListedResponse, error) {
 	s := "?"
 	temp := "any"
@@ -77,7 +77,7 @@ func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, re
 		return nil, err
 	}
 	return &response, nil
-}
+}*/
 
 //CreateRecord creates a new record
 func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
@@ -112,19 +112,19 @@ func CreateRecord(apiToken string, zoneID string, recordType RecordType, name st
 }
 
 //DeleteRecord deletes record with the given recordID
-func DeleteRecord(apiToken string, zoneID string, recordID string) (*Result, error) {
+func DeleteRecord(apiToken string, zoneID string, recordID string) (*Response, error) {
 	resp, err := doAuthorizedRequest(http.MethodDelete, nil, zoneID, recordID, apiToken)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
-	var result Result
-	err = json.Unmarshal(body, &result)
+	var response Response
+	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &response, nil
 }
 
 func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID string, apiToken string) (*http.Response, error) {

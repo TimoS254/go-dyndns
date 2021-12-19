@@ -1,10 +1,10 @@
 package updater
 
 import (
+	"github.com/TimoS254/go-dyndns/internal"
 	"github.com/TimoS254/go-dyndns/internal/config"
 	"github.com/TimoS254/go-dyndns/pkg/api"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -37,9 +37,9 @@ func UpdateDomain(domain *config.Domain) {
 			log.Printf("Encountered an error while updating A record of Domain %s: %v", domain.DomainName, err)
 		}
 		if response.Success {
-			log.Println("Successfully changed A record " + response.Result.Name + " to " + response.Result.Content)
+			log.Printf("Successfully changed A record %s to %s", response.Result.Name, response.Result.Content)
 		} else {
-			log.Printf("Encountered an error while changing %s: %v ", domain.DomainName, response.Errors)
+			log.Printf("%sEncountered an error while changing %s: %v ", internal.Red, domain.DomainName, response.Errors)
 		}
 	}
 	if domain.IP6 {
@@ -49,9 +49,9 @@ func UpdateDomain(domain *config.Domain) {
 			log.Printf("Encountered an error while updating AAAA record of Domain %s: %v", domain.DomainName, err)
 		}
 		if response.Success {
-			log.Println("Successfully changed AAAA record " + response.Result.Name + " to " + response.Result.Content)
+			log.Printf("Successfully changed AAAA record %s to %s", response.Result.Name, response.Result.Content)
 		} else {
-			log.Printf("Encountered an error while changing %s: %v ", domain.DomainName, response.Errors)
+			log.Printf("%sEncountered an error while changing %s: %v ", internal.Red, domain.DomainName, response.Errors)
 		}
 	}
 }
@@ -63,8 +63,10 @@ func DeleteRecords(domain *config.Domain) {
 		if err != nil {
 			log.Printf("Encountered an error while deleting A record of Domain %s: %v", domain.DomainName, err)
 		}
-		if strings.Contains(response.ID, domain.GetID4()) {
-			log.Println("Successfully removed IPv4 Record for " + domain.DomainName)
+		if response.Success {
+			log.Printf("%sSuccessfully removed IPv4 Record for %s", internal.Green, domain.DomainName)
+		} else {
+			log.Printf("%sError removing IPv4 Record for %s", internal.Red, domain.DomainName)
 		}
 	}
 	if domain.IP6 {
@@ -72,8 +74,10 @@ func DeleteRecords(domain *config.Domain) {
 		if err != nil {
 			log.Printf("Encountered an error while deleting AAAA record of Domain %s: %v", domain.DomainName, err)
 		}
-		if strings.Contains(response.ID, domain.GetID6()) {
-			log.Println("Successfully removed IPv6 Record for " + domain.DomainName)
+		if response.Success {
+			log.Printf("%sSuccessfully removed IPv6 Record for %s", internal.Green, domain.DomainName)
+		} else {
+			log.Printf("%sError removing IPv6 Record for %s", internal.Red, domain.DomainName)
 		}
 	}
 }
