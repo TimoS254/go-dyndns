@@ -1,3 +1,3 @@
-module github.com/TimoSLE/go-dyndns
+module github.com/TimoS254/go-dyndns
 
 go 1.15

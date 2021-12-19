@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TimoSLE/go-dyndns/internal/config"
-	"github.com/TimoSLE/go-dyndns/internal/updater"
-	"github.com/TimoSLE/go-dyndns/pkg/api"
+	"github.com/TimoS254/go-dyndns/internal/config"
+	"github.com/TimoS254/go-dyndns/internal/updater"
+	"github.com/TimoS254/go-dyndns/pkg/api"
 	"log"
 	"os"
 	"os/signal"

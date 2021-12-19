@@ -1,8 +1,8 @@
 package updater
 
 import (
-	"github.com/TimoSLE/go-dyndns/internal/config"
-	"github.com/TimoSLE/go-dyndns/pkg/api"
+	"github.com/TimoS254/go-dyndns/internal/config"
+	"github.com/TimoS254/go-dyndns/pkg/api"
 	"log"
 	"strings"
 	"time"

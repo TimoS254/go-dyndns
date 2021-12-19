@@ -1,4 +1,4 @@
-# go-dyndns [![Go Report Card](https://goreportcard.com/badge/github.com/TimoSLE/go-dyndns)](https://goreportcard.com/report/github.com/TimoSLE/go-dyndns) ![Build](https://github.com/TimoSLE/go-dyndns/workflows/build/badge.svg)
+# go-dyndns [![Go Report Card](https://goreportcard.com/badge/github.com/TimoS254/go-dyndns)](https://goreportcard.com/report/github.com/TimoS254/go-dyndns) ![Build](https://github.com/TimoS254/go-dyndns/workflows/build/badge.svg)
 
 
 ## Building
