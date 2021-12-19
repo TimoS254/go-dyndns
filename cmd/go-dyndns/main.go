@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/TimoSLE/go-dyndns/internal/config"
-	"github.com/TimoSLE/go-dyndns/internal/updater"
-	"github.com/TimoSLE/go-dyndns/pkg/api"
-	"io/ioutil"
+	"github.com/TimoS254/go-dyndns/internal"
+	"github.com/TimoS254/go-dyndns/internal/config"
+	"github.com/TimoS254/go-dyndns/internal/updater"
+	"github.com/TimoS254/go-dyndns/pkg/api"
 	"log"
 	"os"
 	"os/signal"
@@ -34,6 +34,10 @@ var (
 func main() {
 	log.Printf("Starting go-dyndns")
 	log.Printf("Version: %s Branch %s\n", GitVersion, GitBranch)
+
+	//Init Colors
+	internal.InitColor()
+
 	//Initialize Config
 	initConfig()
 
@@ -101,7 +105,7 @@ func initConfig() {
 	} else {
 		panic(err)
 	}
-	data, err := ioutil.ReadFile("config.json")
+	data, err := os.ReadFile("config.json")
 	if err != nil {
 		log.Panicf("Could not read Config File: %v", err)
 	}
