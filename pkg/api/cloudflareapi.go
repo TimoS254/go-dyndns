@@ -1,150 +1,232 @@
 package api
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
+	"context"
+	"log"
 	"time"
+
+	"github.com/cloudflare/cloudflare-go"
 )
 
-//HttpClient handles all the http requests of the api
-var HttpClient = &http.Client{}
+// UpdateRecord updates the record with the given recordID
+func UpdateRecord(apiToken string, zoneID string, recordID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
+	clapi, err := cloudflare.NewWithAPIToken(apiToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+	zone := cloudflare.ZoneIdentifier(zoneID)
+	params := cloudflare.UpdateDNSRecordParams{
+		Type:    string(recordType),
+		Name:    name,
+		Content: content,
+		ID:      recordID,
+		Proxied: &proxied,
+	}
+	record, err := clapi.UpdateDNSRecord(ctx, zone, params)
+	resp := Response{
+		Success:  false,
+		Errors:   nil,
+		Messages: nil,
+		Result: Result{
+			ID:         record.ID,
+			Type:       record.Type,
+			Name:       record.Name,
+			Content:    record.Content,
+			Proxiable:  record.Proxiable,
+			Proxied:    *record.Proxied,
+			TTL:        record.TTL,
+			Locked:     record.Locked,
+			ZoneID:     record.ZoneID,
+			ZoneName:   record.ZoneName,
+			CreatedOn:  record.CreatedOn,
+			ModifiedOn: record.ModifiedOn,
+			Data:       record.Data,
+			Meta:       record.Meta,
+		},
+	}
+	if err != nil {
+		resp.Success = false
+	} else {
+		resp.Success = true
+	}
+	return &resp, err
+}
 
+// CreateRecord creates a new record
+func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
+	clapi, err := cloudflare.NewWithAPIToken(apiToken)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	ctx := context.TODO()
+	zone := cloudflare.ZoneIdentifier(zoneID)
+	params := cloudflare.CreateDNSRecordParams{
+		CreatedOn:  time.Now(),
+		ModifiedOn: time.Now(),
+		Type:       string(recordType),
+		Name:       name,
+		Content:    content,
+		Proxied:    &proxied,
+	}
+	record, err := clapi.CreateDNSRecord(ctx, zone, params)
+	resp := Response{
+		Success:  false,
+		Errors:   nil,
+		Messages: nil,
+		Result: Result{
+			ID:         record.ID,
+			Type:       record.Type,
+			Name:       record.Name,
+			Content:    record.Content,
+			Proxiable:  record.Proxiable,
+			Proxied:    false,
+			TTL:        record.TTL,
+			Locked:     record.Locked,
+			ZoneID:     record.ZoneID,
+			ZoneName:   record.ZoneName,
+			CreatedOn:  record.CreatedOn,
+			ModifiedOn: record.ModifiedOn,
+			Data:       record.Data,
+			Meta:       record.Meta,
+		},
+	}
+	if err != nil {
+		resp.Success = false
+	} else {
+		resp.Success = true
+	}
+	return &resp, err
+}
+
+// DeleteRecord deletes record with the given recordID
+func DeleteRecord(apiToken string, zoneID string, recordID string) (*Response, error) {
+	clapi, err := cloudflare.NewWithAPIToken(apiToken)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+	zone := cloudflare.ZoneIdentifier(zoneID)
+	err = clapi.DeleteDNSRecord(ctx, zone, recordID)
+	resp := Response{
+		Success:  false,
+		Errors:   nil,
+		Messages: nil,
+		Result:   Result{},
+	}
+	if err != nil {
+		resp.Success = false
+	} else {
+		resp.Success = true
+	}
+	return &resp, err
+}
+
+/*
 const url = "https://api.cloudflare.com/client/v4/zones/%s/dns_records/%s"
 
-//UpdateRecord updates the record with the given recordID
-func UpdateRecord(apiToken string, zoneID string, recordID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
-	//Creating request Body
-	request := requestBody{
-		RecordType: recordType,
-		Name:       name,
-		Content:    content,
-		TTL:        1,
-		Proxied:    proxied,
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
+// UpdateRecord updates the record with the given recordID
+
+	func UpdateRecord(apiToken string, zoneID string, recordID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
+			//Creating request Body
+			request := requestBody{
+				RecordType: recordType,
+				Name:       name,
+				Content:    content,
+				TTL:        1,
+				Proxied:    proxied,
+			}
+			body, err := json.Marshal(request)
+			if err != nil {
+				return nil, err
+			}
+
+			resp, err := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), zoneID, recordID, apiToken)
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			body, err = io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			var response Response
+			if err = json.Unmarshal(body, &response); err != nil {
+				return nil, err
+			}
+			return &response, nil
+		}
+
+// CreateRecord creates a new record
+
+	func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
+		//Creating Json request Body
+		request := requestBody{
+			RecordType: recordType,
+			Name:       name,
+			Content:    content,
+			TTL:        1,
+			Proxied:    proxied,
+		}
+		body, err := json.Marshal(request)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := doAuthorizedRequest(http.MethodPost, bytes.NewReader(body), zoneID, "", apiToken)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		body, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		var response Response
+		if err = json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+		return &response, nil
 	}
 
-	resp, err := doAuthorizedRequest(http.MethodPut, bytes.NewReader(body), zoneID, recordID, apiToken)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+// DeleteRecord deletes record with the given recordID
 
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var response Response
-	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-	return &response, nil
-}
-
-/*/ListRecords list all records which fit the given parameters
-func ListRecords(apiToken string, zoneID string, forceReqs bool, name string, recordType RecordType) (*ListedResponse, error) {
-	s := "?"
-	temp := "any"
-	if forceReqs {
-		temp = "all"
-	}
-	s = s + "match=" + temp
-	if name != "" {
-		s = s + "&name=" + name
-	}
-	if recordType != "" {
-		s = s + "&type=" + string(recordType)
-	}
-	s = s + "&per_page=100"
-
-	resp, err := doAuthorizedRequest(http.MethodGet, nil, zoneID, s, apiToken)
-	if err != nil {
-		return nil, err
+	func DeleteRecord(apiToken string, zoneID string, recordID string) (*Response, error) {
+		resp, err := doAuthorizedRequest(http.MethodDelete, nil, zoneID, recordID, apiToken)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		var response Response
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
+		return &response, nil
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var response ListedResponse
-	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-	return &response, nil
-}*/
+	func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID string, apiToken string) (*http.Response, error) {
+		//Create Request
+		req, err := http.NewRequest(method, fmt.Sprintf(url, zoneID, domainID), body)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+apiToken)
+		req.Header.Set("Content-Type", "application/json")
+		req.Close = true
 
-//CreateRecord creates a new record
-func CreateRecord(apiToken string, zoneID string, recordType RecordType, name string, content string, proxied bool) (*Response, error) {
-	//Creating Json request Body
-	request := requestBody{
-		RecordType: recordType,
-		Name:       name,
-		Content:    content,
-		TTL:        1,
-		Proxied:    proxied,
+		//Sending Request
+		resp, err := HttpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := doAuthorizedRequest(http.MethodPost, bytes.NewReader(body), zoneID, "", apiToken)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var response Response
-	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-	return &response, nil
-}
-
-//DeleteRecord deletes record with the given recordID
-func DeleteRecord(apiToken string, zoneID string, recordID string) (*Response, error) {
-	resp, err := doAuthorizedRequest(http.MethodDelete, nil, zoneID, recordID, apiToken)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	var response Response
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return nil, err
-	}
-	return &response, nil
-}
-
-func doAuthorizedRequest(method string, body io.Reader, zoneID string, domainID string, apiToken string) (*http.Response, error) {
-	//Create Request
-	req, err := http.NewRequest(method, fmt.Sprintf(url, zoneID, domainID), body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+apiToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Close = true
-
-	//Sending Request
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
-}
-
+*/
 type requestBody struct {
 	RecordType RecordType `json:"type"`
 	Name       string     `json:"name"`
@@ -153,7 +235,7 @@ type requestBody struct {
 	Proxied    bool       `json:"proxied"`
 }
 
-//Response represents the response from the Cloudflare API
+// Response represents the response from the Cloudflare API
 type Response struct {
 	Success  bool          `json:"success"`  //request was successful
 	Errors   []interface{} `json:"errors"`   //potential errors with the request
@@ -161,8 +243,8 @@ type Response struct {
 	Result   Result        `json:"result"`   //See Result
 }
 
-//ListedResponse is only applicable to ListRecords as it can
-//return more than one result in an Array
+// ListedResponse is only applicable to ListRecords as it can
+// return more than one result in an Array
 type ListedResponse struct {
 	Success  bool          `json:"success"`  //request was successful
 	Errors   []interface{} `json:"errors"`   //potential errors with the request
@@ -170,10 +252,10 @@ type ListedResponse struct {
 	Result   []Result      `json:"result"`   //Array of Result
 }
 
-//RecordType represents the type a record can be
+// RecordType represents the type a record can be
 type RecordType string
 
-//Possible options for RecordType
+// Possible options for RecordType
 const (
 	A     RecordType = "A"
 	AAAA  RecordType = "AAAA"
@@ -187,7 +269,7 @@ const (
 	SPF   RecordType = "SPF"
 )
 
-//Result resembles a record returned from Cloudflare API
+// Result resembles a record returned from Cloudflare API
 type Result struct {
 	ID         string    `json:"id"`
 	Type       string    `json:"type"`
@@ -201,10 +283,8 @@ type Result struct {
 	ZoneName   string    `json:"zone_name"`
 	CreatedOn  time.Time `json:"created_on"`
 	ModifiedOn time.Time `json:"modified_on"`
-	Data       struct {
+	Data       interface {
 	} `json:"data"`
-	Meta struct {
-		AutoAdded bool   `json:"auto_added"`
-		Source    string `json:"source"`
+	Meta interface {
 	} `json:"meta"`
 }

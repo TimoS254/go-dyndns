@@ -8,12 +8,15 @@ import (
 
 const ipUrl = "https://api%s.publicip.xyz"
 
-//GetIPv4 returns the current IPv4 of the System in a string
+// HttpClient handles all the http requests of the api
+var HttpClient = &http.Client{}
+
+// GetIPv4 returns the current IPv4 of the System in a string
 func GetIPv4() (string, error) {
 	return getIP("4")
 }
 
-//GetIPv6 returns the current IPv6 of the System in a string
+// GetIPv6 returns the current IPv6 of the System in a string
 func GetIPv6() (string, error) {
 	return getIP("6")
 }
