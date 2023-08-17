@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const ipUrl = "https://api%s.publicip.xyz"
+const ipUrl = "https://api%s.ipify.org"
 
 // HttpClient handles all the http requests of the api
 var HttpClient = &http.Client{}
